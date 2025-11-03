@@ -1,7 +1,6 @@
 "use client";
 
 import { CldImage } from 'next-cloudinary';
-import Image from 'next/image';
 
 interface OptimizedImageProps {
   src: string;
@@ -19,8 +18,9 @@ interface OptimizedImageProps {
 }
 
 /**
- * OptimizedImage component that uses Cloudinary when available,
- * falls back to Next.js Image component otherwise.
+ * OptimizedImage component that uses Cloudinary for all images.
+ * All images must be Cloudinary public IDs.
+ * Requires NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME to be set.
  */
 export function OptimizedImage({
   src,
@@ -36,62 +36,34 @@ export function OptimizedImage({
   gravity = 'auto',
   ...props
 }: OptimizedImageProps) {
-  // Access environment variables (NEXT_PUBLIC_ vars are available in client components)
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-
-  // Use Cloudinary if configured, otherwise fallback to Next.js Image
-  if (cloudName) {
-    if (fill) {
-      return (
-        <CldImage
-          src={src}
-          alt={alt}
-          fill
-          className={className}
-          priority={priority}
-          sizes={sizes}
-          quality={quality}
-          crop={crop}
-          gravity={gravity}
-          {...props}
-        />
-      );
-    }
-
-    return (
-      <CldImage
-        src={src}
-        alt={alt}
-        width={width}
-        height={height}
-        className={className}
-        priority={priority}
-        sizes={sizes}
-        quality={quality}
-        crop={crop}
-        gravity={gravity}
-        {...props}
-      />
-    );
+  
+  if (!cloudName) {
+    console.error('NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME is not set. All images require Cloudinary configuration.');
+    return null;
   }
 
-  // Fallback to Next.js Image component
+  // Always use Cloudinary - src should be a Cloudinary public ID
   if (fill) {
     return (
-      <Image
+      <CldImage
         src={src}
         alt={alt}
         fill
         className={className}
         priority={priority}
         sizes={sizes}
+        quality={quality}
+        crop={crop}
+        gravity={gravity}
+        unoptimized={false}
         {...props}
       />
     );
   }
 
   return (
-    <Image
+    <CldImage
       src={src}
       alt={alt}
       width={width}
@@ -99,6 +71,10 @@ export function OptimizedImage({
       className={className}
       priority={priority}
       sizes={sizes}
+      quality={quality}
+      crop={crop}
+      gravity={gravity}
+      unoptimized={false}
       {...props}
     />
   );
