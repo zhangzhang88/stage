@@ -24,7 +24,7 @@ export function CanvasToolbar() {
   const [gradientColors, setGradientColors] = useState(["#ffffff", "#3b82f6"]);
   const [gradientType, setGradientType] = useState<"linear" | "radial">("linear");
   const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(null);
-  const [unsplashLoading, setUnsplashLoading] = useState(false);
+  const [bgUploadError, setBgUploadError] = useState<string | null>(null);
 
   // Upload states
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -118,9 +118,8 @@ export function CanvasToolbar() {
     if (layer && stage) {
       const bgRect = layer.findOne((node: any) => node.id() === "canvas-background") as Konva.Rect;
       if (bgRect && bgRect instanceof Konva.Rect) {
-        // Clear any existing pattern or solid fill first
+        // Clear any existing pattern first (gradient will override fill)
         bgRect.fillPatternImage(null);
-        bgRect.fill(null);
         
         // Build color stops array: [offset1, color1, offset2, color2, ...]
         // Konva accepts hex color strings directly in the array
@@ -135,6 +134,8 @@ export function CanvasToolbar() {
           bgRect.fillLinearGradientColorStops(colorStopsArray);
           bgRect.fillLinearGradientStartPoint({ x: 0, y: 0 });
           bgRect.fillLinearGradientEndPoint({ x: stage.width(), y: stage.height() });
+          // Clear radial gradient if it was set before
+          bgRect.fillRadialGradientColorStops([]);
         } else {
           const centerX = stage.width() / 2;
           const centerY = stage.height() / 2;
@@ -144,6 +145,8 @@ export function CanvasToolbar() {
           bgRect.fillRadialGradientStartRadius(0);
           bgRect.fillRadialGradientEndPoint({ x: centerX, y: centerY });
           bgRect.fillRadialGradientEndRadius(radius);
+          // Clear linear gradient if it was set before
+          bgRect.fillLinearGradientColorStops([]);
         }
         
         // Force redraw
@@ -194,70 +197,52 @@ export function CanvasToolbar() {
           bgRect.fillPatternOffset({ x: 0, y: 0 });
           
           layer.batchDraw();
+          setBackgroundImageUrl(imageUrl);
         }
       } catch (error) {
         console.error("Failed to load background image:", error);
-        // Fallback to Picsum Photos if Unsplash fails
-        try {
-          const width = stage.width();
-          const height = stage.height();
-          const fallbackUrl = `https://picsum.photos/${width}/${height}?random=${Date.now()}`;
-          const fallbackImg = await new Promise<HTMLImageElement>((resolve, reject) => {
-            const image = new Image();
-            image.crossOrigin = "anonymous";
-            image.onload = () => resolve(image);
-            image.onerror = reject;
-            image.src = fallbackUrl;
-          });
-          
-          const bgRect = layer.findOne((node: any) => node.id() === "canvas-background") as Konva.Rect;
-          if (bgRect && bgRect instanceof Konva.Rect) {
-            bgRect.fill(null);
-            bgRect.fillLinearGradientColorStops([]);
-            bgRect.fillRadialGradientColorStops([]);
-            bgRect.fillPatternImage(fallbackImg);
-            bgRect.fillPatternRepeat("no-repeat");
-            const scaleX = stage.width() / fallbackImg.width;
-            const scaleY = stage.height() / fallbackImg.height;
-            bgRect.fillPatternScale({ x: scaleX, y: scaleY });
-            layer.batchDraw();
-            setBackgroundImageUrl(fallbackUrl);
-          }
-        } catch (fallbackError) {
-          console.error("Fallback image also failed:", fallbackError);
-          alert("Failed to load background image. Please try again.");
-        }
+        setBgUploadError("Failed to load background image. Please try again.");
+        alert("Failed to load background image. Please try again.");
       }
     }
   };
 
-  const fetchUnsplashImage = async (query?: string) => {
-    setUnsplashLoading(true);
-    try {
-      const width = stage ? stage.width() : 1920;
-      const height = stage ? stage.height() : 1080;
-      
-      // Use Picsum Photos as primary source (more reliable, no CORS issues)
-      // It provides random high-quality images
-      let url = `https://picsum.photos/${width}/${height}?random=${Date.now()}`;
-      
-      // Alternative: Use Unsplash Source (may have CORS issues in some browsers)
-      // if (query) {
-      //   url = `https://source.unsplash.com/${width}x${height}/?${query}`;
-      // } else {
-      //   url = `https://source.unsplash.com/featured/${width}x${height}`;
-      // }
-      
-      setBackgroundImageUrl(url);
-      await updateCanvasBackgroundImage(url);
-      setBackgroundType("image");
-    } catch (error) {
-      console.error("Failed to fetch background image:", error);
-      alert("Failed to load background image. Please try again.");
-    } finally {
-      setUnsplashLoading(false);
+  const handleBackgroundImageUpload = async (file: File) => {
+    const validationError = validateFile(file);
+    if (validationError) {
+      setBgUploadError(validationError);
+      return;
     }
+
+    setBgUploadError(null);
+    const url = URL.createObjectURL(file);
+    await updateCanvasBackgroundImage(url);
+    setBackgroundType("image");
   };
+
+  const { getRootProps: getBgRootProps, getInputProps: getBgInputProps, isDragActive: isBgDragActive } = useDropzone({
+    onDrop: async (acceptedFiles: File[]) => {
+      if (acceptedFiles.length > 0) {
+        await handleBackgroundImageUpload(acceptedFiles[0]);
+      }
+    },
+    accept: {
+      "image/*": ALLOWED_IMAGE_TYPES.map((type) => type.split("/")[1]),
+    },
+    maxSize: MAX_IMAGE_SIZE,
+    multiple: false,
+  });
+
+  // Static background images from public/backgrounds directory
+  // To add your own backgrounds:
+  // 1. Place image files in public/backgrounds/
+  // 2. Add the paths below (relative to public directory)
+  // 3. They will appear as preset options in the Image tab
+  const staticBackgrounds: string[] = [
+    // Example: "/backgrounds/nature1.jpg"
+    // Example: "/backgrounds/abstract1.png"
+    // Add your image paths here...
+  ];
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -659,56 +644,86 @@ export function CanvasToolbar() {
             {backgroundType === "image" && (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Background Image</label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="text"
-                      placeholder="Search keywords (e.g., nature, abstract, landscape)"
-                      className="flex-1"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          const query = (e.target as HTMLInputElement).value;
-                          if (query.trim()) {
-                            fetchUnsplashImage(query);
-                          }
-                        }
-                      }}
-                    />
-                    <Button
-                      onClick={() => fetchUnsplashImage()}
-                      disabled={unsplashLoading}
-                    >
-                      {unsplashLoading ? "Loading..." : "Random"}
-                    </Button>
+                  <label className="text-sm font-medium">Upload Background Image</label>
+                  <div
+                    {...getBgRootProps()}
+                    className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                      isBgDragActive
+                        ? "border-primary bg-primary/5"
+                        : "border-gray-300 hover:border-gray-400"
+                    }`}
+                  >
+                    <input {...getBgInputProps()} />
+                    <ImageIcon className="mx-auto mb-3 h-10 w-10 text-gray-400" />
+                    {isBgDragActive ? (
+                      <p className="text-sm">Drop the image here...</p>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">
+                          Drag & drop an image here, or click to select
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          PNG, JPG, WEBP up to {MAX_IMAGE_SIZE / 1024 / 1024}MB
+                        </p>
+                      </div>
+                    )}
                   </div>
+                  {bgUploadError && (
+                    <div className="text-sm text-destructive bg-destructive/10 p-2 rounded">
+                      {bgUploadError}
+                    </div>
+                  )}
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Quick Search</label>
-                  <div className="flex flex-wrap gap-2">
-                    {["nature", "abstract", "landscape", "city", "ocean", "mountains", "sky", "minimal"].map((term) => (
-                      <Button
-                        key={term}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => fetchUnsplashImage(term)}
-                        disabled={unsplashLoading}
-                      >
-                        {term}
-                      </Button>
-                    ))}
+                {staticBackgrounds.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Preset Backgrounds</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {staticBackgrounds.map((bgPath, idx) => (
+                        <button
+                          key={idx}
+                          className="relative aspect-video rounded-lg overflow-hidden border-2 border-gray-200 hover:border-primary transition-colors group"
+                          onClick={() => updateCanvasBackgroundImage(bgPath)}
+                        >
+                          <img
+                            src={bgPath}
+                            alt={`Background ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {backgroundImageUrl && (
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Current Image</label>
+                    <label className="text-sm font-medium">Current Background</label>
                     <div className="relative rounded-lg overflow-hidden border">
                       <img
                         src={backgroundImageUrl}
                         alt="Background preview"
                         className="w-full h-32 object-cover"
                       />
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={() => {
+                          const bgRect = layer?.findOne((node: any) => node.id() === "canvas-background") as Konva.Rect;
+                          if (bgRect && bgRect instanceof Konva.Rect) {
+                            bgRect.fillPatternImage(null);
+                            bgRect.fill(backgroundColor);
+                            layer?.batchDraw();
+                            setBackgroundImageUrl(null);
+                            setBackgroundType("solid");
+                          }
+                        }}
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Remove
+                      </Button>
                     </div>
                   </div>
                 )}
