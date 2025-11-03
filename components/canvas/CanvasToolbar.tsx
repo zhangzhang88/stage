@@ -1184,6 +1184,12 @@ export function CanvasToolbar() {
               </div>
             )}
 
+            <div className="pt-2">
+              <p className="text-xs text-gray-500 text-center">
+                Exported images will include Stage watermark
+              </p>
+            </div>
+
             <Button
               onClick={handleExport}
               disabled={isExporting}

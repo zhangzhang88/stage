@@ -291,16 +291,48 @@ export function CanvasProvider({ children }: { children: React.ReactNode }) {
     },
 
     exportCanvas: async (format, quality = 1) => {
-      if (!stage) return "";
+      if (!stage || !layer) return "";
       
       return new Promise((resolve) => {
+        // Create a temporary layer for watermark
+        const watermarkLayer = new Konva.Layer();
+        
+        // Create watermark text
+        const canvasWidth = stage.width();
+        const canvasHeight = stage.height();
+        const fontSize = Math.max(16, canvasWidth * 0.02); // Responsive font size
+        const padding = Math.max(15, canvasWidth * 0.015); // Responsive padding
+        
+        // Create watermark text only (no background)
+        const watermarkText = new Konva.Text({
+          text: "Stage",
+          fontSize: fontSize,
+          fontFamily: "system-ui, -apple-system, sans-serif",
+          fill: "rgba(255, 255, 255, 0.8)",
+          fontStyle: "normal",
+          fontVariant: "normal",
+          x: canvasWidth - padding - 60, // Approximate width for "Stage"
+          y: canvasHeight - fontSize - padding,
+        });
+        
+        // Adjust position based on actual text width
+        watermarkText.x(canvasWidth - watermarkText.width() - padding);
+        
+        watermarkLayer.add(watermarkText);
+        stage.add(watermarkLayer);
+        watermarkLayer.draw();
+
         // Export the Konva Stage as a data URL
-        // This captures the entire canvas including all objects, background, etc.
+        // This captures the entire canvas including all objects, background, and watermark
         const dataURL = stage.toDataURL({
           mimeType: format === "jpg" ? "image/jpeg" : "image/png",
           quality: quality, // For JPEG, 0-1 quality
           pixelRatio: 1, // Use 1 for standard resolution, increase for higher quality
         });
+
+        // Clean up watermark layer
+        watermarkLayer.destroy();
+
         resolve(dataURL);
       });
     },
