@@ -55,8 +55,8 @@ export function EditorHeader({ className }: EditorHeaderProps) {
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur",
-        "supports-[backdrop-filter]:bg-background/60",
+        "sticky top-0 z-40 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl",
+        "supports-[backdrop-filter]:bg-background/70",
         className
       )}
     >

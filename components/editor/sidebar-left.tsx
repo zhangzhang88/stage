@@ -316,15 +316,15 @@ export function SidebarLeft({
 
   return (
     <>
-      <Sidebar className="border-r border-border bg-background" {...props}>
-        <SidebarHeader className="p-6 border-b border-border">
+      <Sidebar className="border-r border-sidebar-border bg-sidebar/80 backdrop-blur-xl" {...props}>
+        <SidebarHeader className="p-6 border-b border-sidebar-border">
           <Button
             onClick={() => setExportDialogOpen(true)}
             disabled={!uploadedImageUrl}
             className={cn(
-              "w-full h-11 font-medium transition-all",
+              "w-full h-11 font-medium transition-all rounded-lg",
               uploadedImageUrl
-                ? "bg-primary hover:bg-primary/90 text-primary-foreground"
+                ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
                 : "bg-muted text-muted-foreground cursor-not-allowed"
             )}
           >
@@ -332,7 +332,7 @@ export function SidebarLeft({
             Export Image
           </Button>
         </SidebarHeader>
-        <SidebarContent className="px-4 py-6 space-y-6">
+        <SidebarContent className="px-7 py-7 space-y-6">
           <StyleTabs />
         </SidebarContent>
         <SidebarRail />
