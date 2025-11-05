@@ -81,7 +81,7 @@ export default function RootLayout({
       <head>
       <script
             src="https://cdn.databuddy.cc/databuddy.js"
-            data-client-id="_En4VSCYlucFfiZFbycxX"
+            data-client-id="ojnZvmBqgrU4HL636guXM"
             data-track-attributes="true"
             data-track-outgoing-links="true"
             data-track-interactions="true"
@@ -92,7 +92,7 @@ export default function RootLayout({
             data-enable-batching="true"
             crossOrigin="anonymous"
             async
-  ></script>
+      ></script>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
