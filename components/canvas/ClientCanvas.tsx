@@ -194,8 +194,8 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
 
   // Calculate content area (image area without padding)
   // Use viewport-aware dimensions, respecting the selected aspect ratio
-  const availableWidth = Math.min(viewportSize.width * 0.8, containerWidth)
-  const availableHeight = Math.min(viewportSize.height * 0.7, containerHeight)
+  const availableWidth = Math.min(viewportSize.width * 1.1, containerWidth)
+  const availableHeight = Math.min(viewportSize.height * 1.1, containerHeight)
   
   // Calculate canvas dimensions that maintain the selected aspect ratio
   let canvasW, canvasH

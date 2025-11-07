@@ -10,7 +10,7 @@ const PREFS_STORE = "preferences";
 interface ExportEntry {
   id: string;
   blob: Blob;
-  format: "png" | "jpg";
+  format: "png";
   quality: number;
   scale: number;
   timestamp: number;
@@ -19,7 +19,7 @@ interface ExportEntry {
 
 interface ExportPreferences {
   id: "export-preferences";
-  format: "png" | "jpg";
+  format: "png";
   quality: number;
   scale: number;
 }
@@ -98,7 +98,7 @@ export async function getExportPreferences(): Promise<ExportPreferences | null> 
  */
 export async function saveExportedImage(
   blob: Blob,
-  format: "png" | "jpg",
+  format: "png",
   quality: number,
   scale: number,
   fileName: string

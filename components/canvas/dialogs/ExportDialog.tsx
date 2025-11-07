@@ -3,18 +3,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { FormatSelector, ScaleSlider, QualitySlider } from "@/components/export";
+import { ScaleSlider } from "@/components/export";
 
 interface ExportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onExport: () => Promise<void>;
-  format: "png" | "jpg";
-  quality: number;
   scale: number;
   isExporting: boolean;
-  onFormatChange: (format: "png" | "jpg") => void;
-  onQualityChange: (quality: number) => void;
   onScaleChange: (scale: number) => void;
 }
 
@@ -22,12 +18,8 @@ export function ExportDialog({
   open, 
   onOpenChange, 
   onExport,
-  format,
-  quality,
   scale,
   isExporting,
-  onFormatChange,
-  onQualityChange,
   onScaleChange,
 }: ExportDialogProps) {
   const [error, setError] = useState<string | null>(null);
@@ -50,13 +42,7 @@ export function ExportDialog({
           <DialogTitle className="text-lg sm:text-xl font-semibold text-foreground">Export Canvas</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 sm:space-y-5">
-          <FormatSelector format={format} onFormatChange={onFormatChange} />
-          
           <ScaleSlider scale={scale} onScaleChange={onScaleChange} />
-
-          {format === "jpg" && (
-            <QualitySlider quality={quality} onQualityChange={onQualityChange} />
-          )}
 
           {error && (
             <div className="text-sm text-destructive bg-destructive/10 p-2 rounded border border-destructive/20">
@@ -76,7 +62,7 @@ export function ExportDialog({
             className="w-full h-11 font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
             size="lg"
           >
-            {isExporting ? "Exporting..." : `Export as ${format.toUpperCase()}`}
+            {isExporting ? "Exporting..." : "Export as PNG"}
           </Button>
         </div>
       </DialogContent>

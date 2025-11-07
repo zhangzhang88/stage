@@ -12,7 +12,7 @@ import { getKonvaStage } from '@/components/canvas/ClientCanvas';
 import { trackEvent } from '@/lib/analytics';
 
 export interface ExportSettings {
-  format: 'png' | 'jpg';
+  format: 'png';
   quality: number;
   scale: number;
 }
@@ -62,7 +62,7 @@ export function useExport(selectedAspectRatio: string) {
     }
   }, []);
 
-  const updateFormat = useCallback(async (format: 'png' | 'jpg') => {
+  const updateFormat = useCallback(async (format: 'png') => {
     const newSettings = { ...settings, format };
     setSettings(newSettings);
     await savePreferences(newSettings);

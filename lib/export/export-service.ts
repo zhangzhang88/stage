@@ -17,7 +17,7 @@ import { getBackgroundCSS } from '@/lib/constants/backgrounds';
 import { getFontCSS } from '@/lib/constants/fonts';
 
 export interface ExportOptions {
-  format: 'png' | 'jpg';
+  format: 'png';
   quality: number;
   scale: number;
   exportWidth: number;
@@ -346,23 +346,30 @@ async function exportBackground(
   backgroundBlur: number = 0,
   backgroundNoise: number = 0
 ): Promise<HTMLCanvasElement> {
-  // Try to use the existing canvas-background element from the DOM
+  // Get the existing canvas-background element from the DOM - required for export
   const existingBgElement = document.getElementById('canvas-background');
   
-  if (existingBgElement) {
-    // Use the existing element - clone it for export
-    const container = document.createElement('div');
-    container.style.position = 'fixed';
-    container.style.left = '-9999px';
-    container.style.top = '0';
-    container.style.width = `${width}px`;
-    container.style.height = `${height}px`;
-    container.style.overflow = 'hidden';
-    container.style.isolation = 'isolate';
-    container.style.background = 'transparent';
-    
-    document.body.appendChild(container);
-    
+  if (!existingBgElement) {
+    throw new Error('Canvas background element not found. Please ensure the canvas is properly initialized.');
+  }
+
+  // Create export container
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.left = '-99999px';
+  container.style.top = '0';
+  container.style.width = `${width}px`;
+  container.style.height = `${height}px`;
+  container.style.overflow = 'visible';
+  container.style.isolation = 'isolate';
+  container.style.background = 'transparent';
+  container.style.zIndex = '999999';
+  container.style.visibility = 'visible';
+  container.style.opacity = '1';
+  
+  document.body.appendChild(container);
+  
+  try {
     // Clone the background element and resize to export dimensions
     const bgElement = existingBgElement.cloneNode(true) as HTMLElement;
     bgElement.style.width = `${width}px`;
@@ -378,19 +385,32 @@ async function exportBackground(
     
     container.appendChild(bgElement);
     
-    // Don't add noise overlay to DOM - we'll apply it via canvas after blur
-    // This ensures noise is sharp on top of blurred background, matching preview exactly
+    // Get actual canvas container dimensions for proper scaling
+    const canvasContainer = document.getElementById('image-render-card');
+    if (!canvasContainer) {
+      throw new Error('Canvas container not found. Please ensure the canvas is properly initialized.');
+    }
     
+    const canvasRect = canvasContainer.getBoundingClientRect();
+    let scaleX = 1;
+    let scaleY = 1;
+    if (canvasRect.width > 0 && canvasRect.height > 0) {
+      scaleX = width / canvasRect.width;
+      scaleY = height / canvasRect.height;
+    }
+
     // Add text overlays
-    textOverlays.forEach((overlay) => {
-      if (!overlay.isVisible) return;
+    for (const overlay of textOverlays) {
+      if (!overlay.isVisible) continue;
       
       const textElement = document.createElement('div');
       textElement.style.position = 'absolute';
+      // Text overlays use percentage positions (0-100)
       textElement.style.left = `${(overlay.position.x / 100) * width}px`;
       textElement.style.top = `${(overlay.position.y / 100) * height}px`;
       textElement.style.transform = 'translate(-50%, -50%)';
-      textElement.style.fontSize = `${overlay.fontSize}px`;
+      // Scale font size for export
+      textElement.style.fontSize = `${overlay.fontSize * scaleX}px`;
       textElement.style.fontWeight = overlay.fontWeight;
       textElement.style.fontFamily = getFontCSS(overlay.fontFamily);
       
@@ -409,6 +429,9 @@ async function exportBackground(
       textElement.style.opacity = overlay.opacity.toString();
       textElement.style.whiteSpace = 'nowrap';
       textElement.style.pointerEvents = 'none';
+      textElement.style.zIndex = '1000';
+      textElement.style.visibility = 'visible';
+      textElement.style.display = 'block';
       textElement.textContent = overlay.text;
       
       if (overlay.orientation === 'vertical') {
@@ -426,43 +449,25 @@ async function exportBackground(
           document.body.removeChild(tempEl);
           shadowColor = computed || shadowColor;
         }
-        textElement.style.textShadow = `${overlay.textShadow.offsetX}px ${overlay.textShadow.offsetY}px ${overlay.textShadow.blur}px ${shadowColor}`;
+        // Scale shadow offsets for export
+        textElement.style.textShadow = `${overlay.textShadow.offsetX * scaleX}px ${overlay.textShadow.offsetY * scaleY}px ${overlay.textShadow.blur * scaleX}px ${shadowColor}`;
       }
       
       container.appendChild(textElement);
-    });
-
-    // Get actual canvas container dimensions for proper scaling
-    const canvasContainer = document.getElementById('image-render-card');
-    let scaleX = 1;
-    let scaleY = 1;
-    if (canvasContainer) {
-      const canvasRect = canvasContainer.getBoundingClientRect();
-      if (canvasRect.width > 0 && canvasRect.height > 0) {
-        scaleX = width / canvasRect.width;
-        scaleY = height / canvasRect.height;
-      }
     }
 
     // Add image overlays
     for (const overlay of imageOverlays) {
       if (!overlay.isVisible) continue;
 
-      const overlayImg = new Image();
-      overlayImg.crossOrigin = 'anonymous';
-      
-      await new Promise<void>((resolve, reject) => {
-        overlayImg.onload = () => resolve();
-        overlayImg.onerror = () => reject(new Error('Failed to load overlay image'));
-        overlayImg.src = overlay.src;
-      });
-
       const overlayElement = document.createElement('div');
       overlayElement.style.position = 'absolute';
-      overlayElement.style.left = `${overlay.position.x * scaleX * scale}px`;
-      overlayElement.style.top = `${overlay.position.y * scaleY * scale}px`;
-      overlayElement.style.width = `${overlay.size * scaleX * scale}px`;
-      overlayElement.style.height = `${overlay.size * scaleY * scale}px`;
+      // Image overlays use pixel positions relative to preview canvas
+      // Scale them to export dimensions
+      overlayElement.style.left = `${overlay.position.x * scaleX}px`;
+      overlayElement.style.top = `${overlay.position.y * scaleY}px`;
+      overlayElement.style.width = `${overlay.size * scaleX}px`;
+      overlayElement.style.height = `${overlay.size * scaleY}px`;
       overlayElement.style.opacity = overlay.opacity.toString();
       overlayElement.style.transform = `
         rotate(${overlay.rotation}deg)
@@ -472,276 +477,30 @@ async function exportBackground(
       overlayElement.style.transformOrigin = 'center center';
       overlayElement.style.pointerEvents = 'none';
       overlayElement.style.overflow = 'hidden';
+      overlayElement.style.zIndex = '1001';
+      overlayElement.style.visibility = 'visible';
+      overlayElement.style.display = 'block';
 
       const img = document.createElement('img');
-      img.src = overlay.src;
+      img.crossOrigin = 'anonymous';
       img.style.width = '100%';
       img.style.height = '100%';
       img.style.objectFit = 'contain';
-      overlayElement.appendChild(img);
-
-      container.appendChild(overlayElement);
-    }
-    
-    try {
-      // Wait for background image to load if it's an image background
-      if (backgroundConfig.type === 'image' && backgroundConfig.value) {
-        await new Promise<void>((resolve) => {
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          img.onload = () => {
-            setTimeout(() => resolve(), 100);
-          };
-          img.onerror = () => resolve();
-          const bgStyle = getBackgroundCSS(backgroundConfig);
-          if (bgStyle.backgroundImage) {
-            const urlMatch = bgStyle.backgroundImage.match(/url\(['"]?(.+?)['"]?\)/);
-            if (urlMatch && urlMatch[1]) {
-              img.src = urlMatch[1];
-            } else {
-              resolve();
-            }
-          } else {
-            resolve();
-          }
-        });
-      }
+      img.style.display = 'block';
       
-      // Convert all oklch colors in the container to RGB before capture
-      const allElements = container.querySelectorAll('*');
-      allElements.forEach((el) => {
-        if (el instanceof HTMLElement) {
-          const computedStyle = window.getComputedStyle(el);
-          const styleProps = ['color', 'backgroundColor', 'background', 'backgroundImage', 'textShadow'];
-          
-          styleProps.forEach((prop) => {
-            try {
-              const value = (computedStyle as any)[prop];
-              if (value && typeof value === 'string' && value.includes('oklch')) {
-                const computed = window.getComputedStyle(el).getPropertyValue(prop);
-                if (computed && !computed.includes('oklch')) {
-                  (el.style as any)[prop] = computed;
-                        }
-                      }
-                    } catch (e) {
-              // Ignore errors
-            }
-          });
-        }
-      });
-      
-      // Wait a moment for styles to apply
-      await new Promise(resolve => setTimeout(resolve, 50));
-      
-      // Capture background and text overlays with html2canvas
-      // Exclude noise overlay - we'll apply it via canvas after blur
-      const canvas = await html2canvas(container, {
-        backgroundColor: null,
-        scale: scale,
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        width: width,
-        height: height,
-        windowWidth: width,
-        windowHeight: height,
-        removeContainer: false,
-        ignoreElements: (element) => {
-          // Ignore noise overlay if it exists - we'll apply it via canvas
-          return element.id === 'export-noise-overlay' || element.id === 'canvas-noise-overlay';
-        },
-        onclone: (clonedDoc, clonedElement) => {
-          // Disable stylesheets that contain oklch
-          try {
-            const stylesheets = Array.from(clonedDoc.styleSheets);
-            stylesheets.forEach((sheet) => {
-              try {
-                if (sheet.href && (sheet.href.includes('globals.css') || sheet.href.includes('tailwind'))) {
-                  (sheet as any).disabled = true;
-                }
-              } catch (e) {
-                // Ignore cross-origin errors
-                    }
-                  });
-                } catch (e) {
-                  // Ignore errors
-                }
-          
-          // Inject RGB overrides to prevent oklch colors
-          injectRGBOverrides(clonedDoc);
-          
-          // Preserve filter styles (blur, etc.) in cloned document
-          const clonedBgElement = clonedElement.querySelector('#export-background-temp') as HTMLElement;
-          if (clonedBgElement) {
-            // Ensure filter is preserved in cloned document
-            if (backgroundBlur > 0) {
-              clonedBgElement.style.setProperty('filter', `blur(${backgroundBlur}px)`, 'important');
-            } else {
-              // Clear filter if blur is 0
-              clonedBgElement.style.setProperty('filter', 'none', 'important');
-            }
-          }
-          
-          // Convert any remaining oklch colors in the cloned document
-          const clonedElements = clonedElement.querySelectorAll('*');
-          clonedElements.forEach((el) => {
-            if (el instanceof HTMLElement) {
-              convertStylesToRGB(el, clonedDoc);
-            }
-          });
-          convertStylesToRGB(clonedElement as HTMLElement, clonedDoc);
-          
-          // Force recompute all styles to ensure RGB conversion
-          clonedElements.forEach((el) => {
-            if (el instanceof HTMLElement) {
-              void clonedDoc.defaultView?.getComputedStyle(el);
-            }
-          });
-          void clonedDoc.defaultView?.getComputedStyle(clonedElement);
-        },
-      });
-      
-      document.body.removeChild(container);
-      
-      // Step 1: Apply blur to background (noise was excluded from capture)
-      const blurredCanvas = backgroundBlur > 0 
-        ? applyBlurToCanvas(canvas, backgroundBlur * scale)
-        : canvas;
-      
-      // Step 2: Apply noise overlay on top of blurred background
-      // This matches the preview exactly: sharp noise on top of blurred background
-      if (backgroundNoise > 0) {
-        const noiseIntensity = backgroundNoise / 100;
-        return await applyNoiseToCanvas(blurredCanvas, noiseIntensity, width, height, scale);
-      }
-      
-      return blurredCanvas;
-    } catch (error) {
-      document.body.removeChild(container);
-      throw error;
-    }
-  }
-  
-  // Fallback: Create temporary container - isolated from main document styles
-  const container = document.createElement('div');
-  container.style.position = 'fixed';
-  container.style.left = '-9999px';
-  container.style.top = '0';
-  container.style.width = `${width}px`;
-  container.style.height = `${height}px`;
-  container.style.overflow = 'hidden';
-  container.style.isolation = 'isolate'; // Isolate from parent styles
-  container.style.background = 'transparent'; // Ensure transparent background
-  
-  document.body.appendChild(container);
-  
-  // Create background element
-  const bgElement = createBackgroundElement(width, height, backgroundConfig, borderRadius, backgroundBlur);
-  container.appendChild(bgElement);
-  
-  // Add text overlays if any
-  textOverlays.forEach((overlay) => {
-    if (!overlay.isVisible) return;
-    
-    const textElement = document.createElement('div');
-    textElement.style.position = 'absolute';
-    textElement.style.left = `${(overlay.position.x / 100) * width}px`;
-    textElement.style.top = `${(overlay.position.y / 100) * height}px`;
-    textElement.style.transform = 'translate(-50%, -50%)';
-    textElement.style.fontSize = `${overlay.fontSize}px`;
-    textElement.style.fontWeight = overlay.fontWeight;
-    textElement.style.fontFamily = getFontCSS(overlay.fontFamily);
-    
-    // Convert oklch color to RGB
-    let textColor = overlay.color;
-    if (textColor && textColor.includes('oklch')) {
-      const tempEl = document.createElement('div');
-      tempEl.style.color = textColor;
-      document.body.appendChild(tempEl);
-      const computed = window.getComputedStyle(tempEl).color;
-      document.body.removeChild(tempEl);
-      textColor = computed || textColor;
-    }
-    textElement.style.color = textColor;
-    
-    textElement.style.opacity = overlay.opacity.toString();
-    textElement.style.whiteSpace = 'nowrap';
-    textElement.style.pointerEvents = 'none';
-    textElement.textContent = overlay.text;
-    
-    if (overlay.orientation === 'vertical') {
-      textElement.style.writingMode = 'vertical-rl';
-    }
-    
-    if (overlay.textShadow?.enabled) {
-      // Convert shadow color if it contains oklch
-      let shadowColor = overlay.textShadow.color;
-      if (shadowColor && shadowColor.includes('oklch')) {
-        const tempEl = document.createElement('div');
-        tempEl.style.color = shadowColor;
-        document.body.appendChild(tempEl);
-        const computed = window.getComputedStyle(tempEl).color;
-        document.body.removeChild(tempEl);
-        shadowColor = computed || shadowColor;
-      }
-      textElement.style.textShadow = `${overlay.textShadow.offsetX}px ${overlay.textShadow.offsetY}px ${overlay.textShadow.blur}px ${shadowColor}`;
-    }
-    
-      container.appendChild(textElement);
-    });
-
-    // Get actual canvas container dimensions for proper scaling
-    const canvasContainer = document.getElementById('image-render-card');
-    let scaleX = 1;
-    let scaleY = 1;
-    if (canvasContainer) {
-      const canvasRect = canvasContainer.getBoundingClientRect();
-      if (canvasRect.width > 0 && canvasRect.height > 0) {
-        scaleX = width / canvasRect.width;
-        scaleY = height / canvasRect.height;
-      }
-    }
-
-    // Add image overlays
-    for (const overlay of imageOverlays) {
-      if (!overlay.isVisible) continue;
-
-      const overlayImg = new Image();
-      overlayImg.crossOrigin = 'anonymous';
-      
+      // Wait for image to load before appending
       await new Promise<void>((resolve, reject) => {
-        overlayImg.onload = () => resolve();
-        overlayImg.onerror = () => reject(new Error('Failed to load overlay image'));
-        overlayImg.src = overlay.src;
+        img.onload = () => {
+          overlayElement.appendChild(img);
+          resolve();
+        };
+        img.onerror = () => reject(new Error(`Failed to load overlay image: ${overlay.src}`));
+        img.src = overlay.src;
       });
-
-      const overlayElement = document.createElement('div');
-      overlayElement.style.position = 'absolute';
-      overlayElement.style.left = `${overlay.position.x * scaleX * scale}px`;
-      overlayElement.style.top = `${overlay.position.y * scaleY * scale}px`;
-      overlayElement.style.width = `${overlay.size * scaleX * scale}px`;
-      overlayElement.style.height = `${overlay.size * scaleY * scale}px`;
-      overlayElement.style.opacity = overlay.opacity.toString();
-      overlayElement.style.transform = `
-        rotate(${overlay.rotation}deg)
-        scaleX(${overlay.flipX ? -1 : 1})
-        scaleY(${overlay.flipY ? -1 : 1})
-      `;
-      overlayElement.style.transformOrigin = 'center center';
-      overlayElement.style.pointerEvents = 'none';
-      overlayElement.style.overflow = 'hidden';
-
-      const img = document.createElement('img');
-      img.src = overlay.src;
-      img.style.width = '100%';
-      img.style.height = '100%';
-      img.style.objectFit = 'contain';
-      overlayElement.appendChild(img);
 
       container.appendChild(overlayElement);
     }
     
-    try {
     // Wait for background image to load if it's an image background
     if (backgroundConfig.type === 'image' && backgroundConfig.value) {
       await new Promise<void>((resolve) => {
@@ -750,7 +509,7 @@ async function exportBackground(
         img.onload = () => {
           setTimeout(() => resolve(), 100);
         };
-        img.onerror = () => resolve(); // Continue even if image fails
+        img.onerror = () => resolve();
         const bgStyle = getBackgroundCSS(backgroundConfig);
         if (bgStyle.backgroundImage) {
           const urlMatch = bgStyle.backgroundImage.match(/url\(['"]?(.+?)['"]?\)/);
@@ -776,7 +535,6 @@ async function exportBackground(
           try {
             const value = (computedStyle as any)[prop];
             if (value && typeof value === 'string' && value.includes('oklch')) {
-              // Set the computed RGB value
               const computed = window.getComputedStyle(el).getPropertyValue(prop);
               if (computed && !computed.includes('oklch')) {
                 (el.style as any)[prop] = computed;
@@ -789,42 +547,33 @@ async function exportBackground(
       }
     });
     
-    // Also convert the container itself
-    const containerComputed = window.getComputedStyle(container);
-    const containerProps = ['color', 'backgroundColor', 'background'];
-    containerProps.forEach((prop) => {
-      try {
-        const value = (containerComputed as any)[prop];
-        if (value && typeof value === 'string' && value.includes('oklch')) {
-          const computed = containerComputed.getPropertyValue(prop);
-          if (computed && !computed.includes('oklch')) {
-            (container.style as any)[prop] = computed;
-          }
-        }
-      } catch (e) {
-        // Ignore errors
-      }
-    });
+    // Wait for fonts to load and styles to apply
+    if (document.fonts && document.fonts.ready) {
+      await document.fonts.ready;
+    }
+    // Wait longer for all elements to render properly
+    await new Promise(resolve => setTimeout(resolve, 300));
     
-    // Wait a moment for styles to apply
-    await new Promise(resolve => setTimeout(resolve, 50));
+    // Force a reflow to ensure all styles are applied
+    void container.offsetHeight;
     
-      // Capture background and text overlays with html2canvas
-      const canvas = await html2canvas(container, {
-        backgroundColor: null,
-        scale: scale,
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        width: width,
-        height: height,
-        windowWidth: width,
-        windowHeight: height,
-        removeContainer: false,
-        ignoreElements: (element) => {
-          // Ignore noise overlay if it exists - we'll apply it via canvas
-          return element.id === 'export-noise-overlay' || element.id === 'canvas-noise-overlay';
-        },
+    // Capture background and text overlays with html2canvas
+    // Exclude noise overlay - we'll apply it via canvas after blur
+    const canvas = await html2canvas(container, {
+      backgroundColor: null,
+      scale: scale,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      width: width,
+      height: height,
+      windowWidth: width,
+      windowHeight: height,
+      removeContainer: false,
+      ignoreElements: (element) => {
+        // Ignore noise overlay if it exists - we'll apply it via canvas
+        return element.id === 'export-noise-overlay' || element.id === 'canvas-noise-overlay';
+      },
       onclone: (clonedDoc, clonedElement) => {
         // Disable stylesheets that contain oklch
         try {
@@ -873,25 +622,30 @@ async function exportBackground(
           }
         });
         void clonedDoc.defaultView?.getComputedStyle(clonedElement);
-    },
-  });
-
-    // Step 1: Apply blur to background
+      },
+    });
+    
+    document.body.removeChild(container);
+    
+    // Step 1: Apply blur to background (noise was excluded from capture)
     const blurredCanvas = backgroundBlur > 0 
       ? applyBlurToCanvas(canvas, backgroundBlur * scale)
       : canvas;
-
+    
     // Step 2: Apply noise overlay on top of blurred background
     // This matches the preview exactly: sharp noise on top of blurred background
     if (backgroundNoise > 0) {
       const noiseIntensity = backgroundNoise / 100;
       return await applyNoiseToCanvas(blurredCanvas, noiseIntensity, width, height, scale);
     }
-
+    
     return blurredCanvas;
-  } finally {
-    // Clean up
-    document.body.removeChild(container);
+  } catch (error) {
+    // Clean up container on error
+    if (container.parentNode) {
+      document.body.removeChild(container);
+    }
+    throw error;
   }
 }
 
@@ -992,7 +746,7 @@ async function exportKonvaStage(
   targetWidth: number,
   targetHeight: number,
   scale: number,
-  format: 'png' | 'jpg',
+  format: 'png',
   quality: number
 ): Promise<HTMLCanvasElement> {
   if (!stage) {
@@ -1024,7 +778,7 @@ async function exportKonvaStage(
     // This preserves exact positioning
     const exportPixelRatio = scale * Math.max(scaleX, scaleY);
     const dataURL = stage.toDataURL({
-      mimeType: format === 'jpg' ? 'image/jpeg' : 'image/png',
+      mimeType: 'image/png',
       quality: quality,
       pixelRatio: exportPixelRatio,
     });
@@ -1247,7 +1001,7 @@ export async function exportElement(
     });
 
     // Step 5: Convert to blob and data URL
-    const mimeType = options.format === 'jpg' ? 'image/jpeg' : 'image/png';
+    const mimeType = 'image/png';
   
     const blob = await new Promise<Blob>((resolve, reject) => {
       finalCanvas.toBlob((blob) => {

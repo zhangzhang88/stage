@@ -38,8 +38,6 @@ export function SidebarLeft({
   const {
     settings: exportSettings,
     isExporting,
-    updateFormat,
-    updateQuality,
     updateScale,
     exportImage,
   } = useExport(selectedAspectRatio);
@@ -103,12 +101,8 @@ export function SidebarLeft({
         open={exportDialogOpen}
         onOpenChange={setExportDialogOpen}
         onExport={() => exportImage().then(() => {})}
-        format={exportSettings.format}
-        quality={exportSettings.quality}
         scale={exportSettings.scale}
         isExporting={isExporting}
-        onFormatChange={updateFormat}
-        onQualityChange={updateQuality}
         onScaleChange={updateScale}
       />
     </>

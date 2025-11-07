@@ -86,7 +86,7 @@ export interface TransformProperties {
 
 // Export options
 export interface ExportOptions {
-  format: "png" | "jpg";
-  quality?: number; // 0-1 for JPG
+  format: "png";
+  quality?: number;
   filename?: string;
 }

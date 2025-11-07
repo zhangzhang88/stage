@@ -448,8 +448,8 @@ export function CanvasProvider({ children }: { children: React.ReactNode }) {
         // Export the Konva Stage as a data URL
         // This captures the entire canvas including all objects, background, and watermark
         const dataURL = stage.toDataURL({
-          mimeType: format === "jpg" ? "image/jpeg" : "image/png",
-          quality: quality, // For JPEG, 0-1 quality
+          mimeType: "image/png",
+          quality: quality,
           pixelRatio: 1, // Use 1 for standard resolution, increase for higher quality
         });
 

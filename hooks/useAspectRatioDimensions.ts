@@ -94,9 +94,9 @@ export function useResponsiveCanvasDimensions() {
     const availableWidth = viewportSize.width - sidePanelsWidth - padding;
     const availableHeight = viewportSize.height - 200; // Account for header/bottom bar
     
-    // Use more conservative percentages to ensure canvas fits
-    const maxWidth = Math.min(availableWidth * 0.9, 1920);
-    const maxHeight = Math.min(availableHeight * 0.75, 1080);
+    // Increased percentages and max dimensions for larger canvas
+    const maxWidth = Math.min(availableWidth * 1.1, 3000);
+    const maxHeight = Math.min(availableHeight * 1.1, 1500);
     
     const fitDimensions = calculateFitDimensions(
       preset.width,
