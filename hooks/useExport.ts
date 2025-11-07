@@ -9,6 +9,7 @@ import { exportElement, type ExportOptions } from '@/lib/export/export-service';
 import { saveExportPreferences, getExportPreferences, saveExportedImage } from '@/lib/export-storage';
 import { useImageStore, useEditorStore } from '@/lib/store';
 import { getKonvaStage } from '@/components/canvas/ClientCanvas';
+import { trackEvent } from '@/lib/analytics';
 
 export interface ExportSettings {
   format: 'png' | 'jpg';
@@ -131,6 +132,16 @@ export function useExport(selectedAspectRatio: string) {
         // Continue with download even if storage fails
       }
 
+      // Track export event
+      trackEvent('image_exported', {
+        format: settings.format,
+        quality: settings.quality,
+        scale: settings.scale,
+        aspectRatio: selectedAspectRatio,
+        width: preset.width,
+        height: preset.height,
+      });
+
       // Download the file
       const link = document.createElement('a');
       link.download = fileName;
@@ -226,6 +237,13 @@ export function useExport(selectedAspectRatio: string) {
             'image/png': blob
           })
         ]);
+
+        // Track copy event
+        trackEvent('image_copied', {
+          aspectRatio: selectedAspectRatio,
+          width: preset.width,
+          height: preset.height,
+        });
       } else {
         throw new Error('Clipboard API not supported');
       }

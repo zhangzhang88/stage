@@ -79,20 +79,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
-      <script
-            src="https://cdn.databuddy.cc/databuddy.js"
-            data-client-id="ojnZvmBqgrU4HL636guXM"
-            data-track-attributes="true"
-            data-track-outgoing-links="true"
-            data-track-interactions="true"
-            data-track-engagement="true"
-            data-track-exit-intent="true"
-            data-track-bounce-rate="true"
-            data-track-web-vitals="true"
-            data-enable-batching="true"
-            crossOrigin="anonymous"
-            async
-      ></script>
+      <script defer src="https://cloud.umami.is/script.js" data-website-id="11f36f2b-1ef5-4014-bfdb-089aa4770c53"></script>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
