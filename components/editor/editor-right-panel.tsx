@@ -114,21 +114,16 @@ export function EditorRightPanel() {
                 <Label className="text-xs font-medium text-muted-foreground">Background Type</Label>
               <div className="flex gap-2">
                 <Button
-                  variant={backgroundConfig.type === 'gradient' ? 'default' : 'outline'}
+                  variant={backgroundConfig.type === 'image' ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => {
-                    setBackgroundType('gradient');
-                    if (!backgroundConfig.value || typeof backgroundConfig.value !== 'string' || !gradientColors[backgroundConfig.value as GradientKey]) {
-                      setBackgroundValue('sunset_vibes');
-                    }
-                  }}
+                  onClick={() => setBackgroundType('image')}
                     className={`flex-1 text-xs font-medium transition-all rounded-lg h-8 border ${
-                    backgroundConfig.type === 'gradient'
+                    backgroundConfig.type === 'image'
                         ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm border-primary'
                         : 'border-border/50 hover:bg-accent text-foreground bg-background hover:border-border'
                   }`}
                 >
-                  Gradient
+                  Image
                 </Button>
                 <Button
                   variant={backgroundConfig.type === 'solid' ? 'default' : 'outline'}
@@ -148,16 +143,21 @@ export function EditorRightPanel() {
                   Solid
                 </Button>
                 <Button
-                  variant={backgroundConfig.type === 'image' ? 'default' : 'outline'}
+                  variant={backgroundConfig.type === 'gradient' ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => setBackgroundType('image')}
+                  onClick={() => {
+                    setBackgroundType('gradient');
+                    if (!backgroundConfig.value || typeof backgroundConfig.value !== 'string' || !gradientColors[backgroundConfig.value as GradientKey]) {
+                      setBackgroundValue('sunset_vibes');
+                    }
+                  }}
                     className={`flex-1 text-xs font-medium transition-all rounded-lg h-8 border ${
-                    backgroundConfig.type === 'image'
+                    backgroundConfig.type === 'gradient'
                         ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm border-primary'
                         : 'border-border/50 hover:bg-accent text-foreground bg-background hover:border-border'
                   }`}
                 >
-                  Image
+                  Gradient
                 </Button>
                 </div>
               </div>

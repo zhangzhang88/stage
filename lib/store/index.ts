@@ -440,8 +440,8 @@ export const useImageStore = create<ImageState>((set, get) => ({
   backgroundBorderRadius: 0,
   selectedAspectRatio: '16_9',
   backgroundConfig: {
-    type: 'gradient',
-    value: 'sunset_vibes',
+    type: 'image',
+    value: 'backgrounds/backgrounds/mac/mac-asset-10',
     opacity: 1,
   },
   textOverlays: [],
@@ -481,8 +481,8 @@ export const useImageStore = create<ImageState>((set, get) => ({
       imageName: file.name,
       imageScale: 90,
       backgroundConfig: {
-        type: 'gradient',
-        value: 'orange_fire',
+        type: 'image',
+        value: 'backgrounds/backgrounds/mac/mac-asset-10',
         opacity: 1,
         
       },
@@ -548,7 +548,7 @@ export const useImageStore = create<ImageState>((set, get) => ({
       
       // If current value is a gradient or solid color key, or not a valid image, set default to radiant9
       const newValue = (isGradientKey || isSolidColorKey || !isValidImage) 
-        ? 'backgrounds/backgrounds/radiant/radiant9' 
+        ? 'backgrounds/backgrounds/mac/mac-asset-10' 
         : currentValue
       
       set({
