@@ -8,7 +8,8 @@
     "start": "next start",
     "upload-backgrounds": "tsx scripts/upload-backgrounds.ts",
     "upload-demo-images": "tsx scripts/upload-demo-images.ts",
-    "upload-overlays": "tsx scripts/upload-overlays.ts"
+    "upload-overlays": "tsx scripts/upload-overlays.ts",
+    "upload-assets": "tsx scripts/upload-assets.ts"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",
