@@ -27,6 +27,22 @@ export function OverlayRenderer() {
     setDragOffset({ x: offsetX, y: offsetY })
   }
 
+  const handleTouchStart = (e: React.TouchEvent, overlayId: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const overlay = imageOverlays.find((o) => o.id === overlayId)
+    if (!overlay || !containerRef.current) return
+
+    setSelectedOverlayId(overlayId)
+    setIsDragging(true)
+
+    const touch = e.touches[0]
+    const containerRect = containerRef.current.getBoundingClientRect()
+    const offsetX = touch.clientX - containerRect.left - overlay.position.x
+    const offsetY = touch.clientY - containerRect.top - overlay.position.y
+    setDragOffset({ x: offsetX, y: offsetY })
+  }
+
   useEffect(() => {
     if (!isDragging || !selectedOverlayId || !containerRef.current) return
 
@@ -50,16 +66,46 @@ export function OverlayRenderer() {
       })
     }
 
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault()
+      const overlay = imageOverlays.find((o) => o.id === selectedOverlayId)
+      if (!overlay || !containerRef.current) return
+
+      const touch = e.touches[0]
+      const containerRect = containerRef.current.getBoundingClientRect()
+      const newX = touch.clientX - containerRect.left - dragOffset.x
+      const newY = touch.clientY - containerRect.top - dragOffset.y
+
+      // Constrain to container bounds
+      const maxX = containerRect.width - overlay.size
+      const maxY = containerRect.height - overlay.size
+
+      updateImageOverlay(selectedOverlayId, {
+        position: {
+          x: Math.max(0, Math.min(newX, maxX)),
+          y: Math.max(0, Math.min(newY, maxY)),
+        },
+      })
+    }
+
     const handleMouseUp = () => {
+      setIsDragging(false)
+    }
+
+    const handleTouchEnd = () => {
       setIsDragging(false)
     }
 
     document.addEventListener('mousemove', handleMouseMove)
     document.addEventListener('mouseup', handleMouseUp)
+    document.addEventListener('touchmove', handleTouchMove, { passive: false })
+    document.addEventListener('touchend', handleTouchEnd)
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
+      document.removeEventListener('touchmove', handleTouchMove)
+      document.removeEventListener('touchend', handleTouchEnd)
     }
   }, [isDragging, selectedOverlayId, dragOffset, imageOverlays, updateImageOverlay])
 
@@ -111,6 +157,7 @@ export function OverlayRenderer() {
               borderRadius: '4px',
             }}
             onMouseDown={(e) => handleMouseDown(e, overlay.id)}
+            onTouchStart={(e) => handleTouchStart(e, overlay.id)}
           >
             <div className="relative w-full h-full">
               <img
@@ -131,4 +178,3 @@ export function OverlayRenderer() {
     </div>
   )
 }
-
