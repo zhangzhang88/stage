@@ -39,6 +39,7 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
   });
   const patternRectRef = useRef<any>(null)
   const noiseRectRef = useRef<any>(null)
+  const backgroundRef = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [patternImage, setPatternImage] = useState<HTMLCanvasElement | null>(null)
   const [noiseImage, setNoiseImage] = useState<HTMLImageElement | null>(null)
@@ -289,6 +290,21 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
     patternStyle.blur,
   ])
 
+  // Cache background when blur is active
+  useEffect(() => {
+    if (backgroundRef.current && backgroundBlur > 0) {
+      backgroundRef.current.cache()
+      backgroundRef.current.getLayer()?.batchDraw()
+    }
+  }, [
+    backgroundBlur,
+    backgroundConfig,
+    backgroundBorderRadius,
+    canvasW,
+    canvasH,
+    bgImage,
+  ])
+
   let imageScaledW, imageScaledH
   if (contentW / contentH > imageAspect) {
     imageScaledH = contentH * screenshot.scale
@@ -451,6 +467,7 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
           <Layer>
             {backgroundConfig.type === 'image' && bgImage ? (
               <KonvaImage
+                ref={backgroundRef}
                 image={bgImage}
                 width={canvasW}
                 height={canvasH}
@@ -461,6 +478,7 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
               />
             ) : (
               <Rect
+                ref={backgroundRef}
                 width={canvasW}
                 height={canvasH}
                 fill={
@@ -472,6 +490,8 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
                 }
                 opacity={backgroundConfig.opacity ?? 1}
                 cornerRadius={backgroundBorderRadius}
+                filters={backgroundBlur > 0 ? [Konva.Filters.Blur] : []}
+                blurRadius={backgroundBlur}
               />
             )}
 
