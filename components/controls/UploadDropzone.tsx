@@ -6,8 +6,6 @@ import { FaImage } from 'react-icons/fa'
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE } from '@/lib/constants'
 import { useEditorStore, useImageStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { WebsiteScreenshotInput } from './WebsiteScreenshotInput'
 
 export function UploadDropzone() {
   const [isDragActive, setIsDragActive] = React.useState(false)
@@ -121,63 +119,49 @@ export function UploadDropzone() {
           </p>
         </div>
 
-        <Tabs defaultValue="upload" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="upload">Upload Image</TabsTrigger>
-            <TabsTrigger value="screenshot">Website Screenshot</TabsTrigger>
-          </TabsList>
+        <div
+          {...getRootProps()}
+          className={cn(
+            'relative border-2 border-dashed rounded-lg p-8 sm:p-12 md:p-16',
+            'cursor-pointer transition-all duration-200',
+            'flex flex-col items-center justify-center',
+            'min-h-[240px] sm:min-h-[280px]',
+            active
+              ? 'border-primary bg-primary/5 scale-[1.01]'
+              : 'border-border hover:border-primary/50 hover:bg-accent/50',
+            error && 'border-destructive'
+          )}
+        >
+          <input {...getInputProps()} />
 
-          <TabsContent value="upload" className="mt-6">
-            <div
-              {...getRootProps()}
-              className={cn(
-                'relative border-2 border-dashed rounded-lg p-8 sm:p-12 md:p-16',
-                'cursor-pointer transition-all duration-200',
-                'flex flex-col items-center justify-center',
-                'min-h-[240px] sm:min-h-[280px]',
-                active
-                  ? 'border-primary bg-primary/5 scale-[1.01]'
-                  : 'border-border hover:border-primary/50 hover:bg-accent/50',
-                error && 'border-destructive'
-              )}
-            >
-              <input {...getInputProps()} />
-
-              <div
-                className={cn(
-                  'mb-4 sm:mb-6 transition-colors',
-                  active ? 'text-primary' : 'text-muted-foreground'
-                )}
-              >
-                <FaImage size={48} className="sm:hidden" />
-                <FaImage size={56} className="hidden sm:block" />
-              </div>
-
-              {active ? (
-                <p className="text-sm sm:text-base font-medium text-primary">Drop the image here...</p>
-              ) : (
-                <div className="space-y-2 text-center px-2">
-                  <p className="text-sm sm:text-base font-medium">Drag & drop an image here</p>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    or tap to browse • PNG, JPG, WEBP up to {MAX_IMAGE_SIZE / 1024 / 1024}MB • or paste an image
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {error && (
-              <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 sm:p-4 mt-4">
-                <p className="text-xs sm:text-sm text-destructive">{error}</p>
-              </div>
+          <div
+            className={cn(
+              'mb-4 sm:mb-6 transition-colors',
+              active ? 'text-primary' : 'text-muted-foreground'
             )}
-          </TabsContent>
+          >
+            <FaImage size={48} className="sm:hidden" />
+            <FaImage size={56} className="hidden sm:block" />
+          </div>
 
-          <TabsContent value="screenshot" className="mt-6">
-            <WebsiteScreenshotInput />
-          </TabsContent>
-        </Tabs>
+          {active ? (
+            <p className="text-sm sm:text-base font-medium text-primary">Drop the image here...</p>
+          ) : (
+            <div className="space-y-2 text-center px-2">
+              <p className="text-sm sm:text-base font-medium">Drag & drop an image here</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                or tap to browse • PNG, JPG, WEBP up to {MAX_IMAGE_SIZE / 1024 / 1024}MB • or paste an image
+              </p>
+            </div>
+          )}
+        </div>
+
+        {error && (
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 sm:p-4 mt-4">
+            <p className="text-xs sm:text-sm text-destructive">{error}</p>
+          </div>
+        )}
       </div>
     </div>
   )
 }
-

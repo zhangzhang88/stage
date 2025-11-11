@@ -6,7 +6,6 @@ import { OVERLAY_IMAGES } from '@/lib/constants/overlays'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Search, Upload } from 'lucide-react'
-import { CldImage } from 'next-cloudinary'
 import { useResponsiveCanvasDimensions } from '@/hooks/useAspectRatioDimensions'
 
 export function OverlayGallery() {
@@ -114,14 +113,9 @@ export function OverlayGallery() {
             title={publicId.split('/').pop()}
           >
             <div className="relative w-full h-full">
-              <CldImage
+              <img
                 src={publicId}
                 alt={`Overlay ${index + 1}`}
-                width={100}
-                height={100}
-                quality="auto"
-                format="auto"
-                crop="fit"
                 className="object-contain w-full h-full group-hover:scale-105 transition-transform"
               />
             </div>
@@ -136,4 +130,3 @@ export function OverlayGallery() {
     </div>
   )
 }
-

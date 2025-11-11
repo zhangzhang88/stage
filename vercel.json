@@ -1,9 +1,14 @@
 {
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
   "functions": {
-    "app/api/screenshot/route.ts": {
-      "maxDuration": 10,
-      "memory": 1024
+    "app/api/**/route.ts": {
+      "maxDuration": 30
     }
+  },
+  "env": {
+    "NEXT_PUBLIC_SITE_URL": "@next_public_site_url"
   }
 }
-

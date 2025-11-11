@@ -1,8 +1,38 @@
 /**
  * Available anime character overlay images
- * Using Cloudinary public IDs for optimized delivery
+ * Using local paths without Cloudinary
  */
-import { OVERLAY_PUBLIC_IDS } from '@/lib/cloudinary-overlays'
-
-export const OVERLAY_IMAGES = OVERLAY_PUBLIC_IDS as readonly string[]
-
+export const OVERLAY_IMAGES = [
+  '/overlays/anime.webp',
+  '/overlays/animeboy.png',
+  '/overlays/animechar.png',
+  '/overlays/animegirl.png',
+  '/overlays/animegirl2.png',
+  '/overlays/animegirl3.png',
+  '/overlays/animegirl4.png',
+  '/overlays/ash.webp',
+  '/overlays/character.webp',
+  '/overlays/chika.png',
+  '/overlays/cute.png',
+  '/overlays/dragonballz.png',
+  '/overlays/girlpink.png',
+  '/overlays/goku1.webp',
+  '/overlays/goku2.webp',
+  '/overlays/goku3.webp',
+  '/overlays/luffy.webp',
+  '/overlays/naruto.png',
+  '/overlays/naruto1.webp',
+  '/overlays/naruto2.webp',
+  '/overlays/naruto3.webp',
+  '/overlays/naruto4.png',
+  '/overlays/naruto5.png',
+  '/overlays/onepiece.png',
+  '/overlays/onepiece.webp',
+  '/overlays/onepiece2.png',
+  '/overlays/onepunchman2.webp',
+  '/overlays/onepunchman3.webp',
+  '/overlays/overlay1.png',
+  '/overlays/overlay2.png',
+  '/overlays/overlay3.png',
+  '/overlays/tanjiro.webp',
+] as readonly string[]

@@ -1,7 +1,6 @@
 "use client";
 
 import { OptimizedImage } from "@/components/ui/optimized-image";
-import { demoImagePublicIds } from "@/lib/cloudinary-demo-images";
 
 interface MasonryItem {
   id: number;
@@ -42,10 +41,25 @@ const getAspectRatio = (index: number): string => {
   return defaultRatios[(demoNumber - 1) % defaultRatios.length];
 };
 
-// Use demo image Cloudinary public IDs directly with specific sizes
-const sampleItems: MasonryItem[] = demoImagePublicIds.map((publicId, index) => ({
+// Use local demo images without Cloudinary
+const SAMPLE_IMAGES = [
+  '/assets/asset-14.jpg',
+  '/assets/asset-13.jpg',
+  '/assets/asset-12.jpg',
+  '/assets/asset-11.jpg',
+  '/demo/demo-1.jpg',
+  '/demo/demo-2.jpg',
+  '/demo/demo-3.jpg',
+  '/demo/demo-4.jpg',
+  '/demo/demo-5.jpg',
+  '/demo/demo-6.jpg',
+  '/demo/demo-7.jpg',
+  '/demo/demo-8.jpg',
+] as const;
+
+const sampleItems: MasonryItem[] = SAMPLE_IMAGES.map((imagePath, index) => ({
   id: index + 1,
-  image: publicId,
+  image: imagePath,
   alt: `Gallery image ${index + 1}`,
   aspectRatio: getAspectRatio(index),
 }));
@@ -67,15 +81,10 @@ export function MasonryGrid() {
               className="relative bg-card rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-border group mb-3 sm:mb-4 md:mb-6 break-inside-avoid"
             >
               <div className={`relative w-full ${item.aspectRatio} overflow-hidden`}>
-                <OptimizedImage
+                <img
                   src={item.image}
                   alt={item.alt}
-                  fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  quality="auto"
-                  crop="fill"
-                  gravity="auto"
+                  className="object-cover group-hover:scale-110 transition-transform duration-500 ease-out w-full h-full"
                 />
                 {/* Overlay on hover */}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />

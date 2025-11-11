@@ -583,51 +583,10 @@ async function exportOverlays(
       img.style.display = 'block';
       
       let imageSrc = overlay.src;
-      if (typeof overlay.src === 'string' && !overlay.isCustom) {
-        const isCloudinaryId = overlay.src.startsWith('overlays/');
-
-        if (isCloudinaryId) {
-          const cloudName = typeof window !== 'undefined'
-            ? (window as any).__NEXT_DATA__?.env?.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
-              (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME as string)
-            : (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME as string);
-
-          // If Cloudinary is not configured, log warning but use src directly
-          if (!cloudName) {
-            console.warn(`Cloudinary cloud name not found. Image overlay "${overlay.src}" will be used as-is. For optimized images, set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME in your environment variables.`);
-            // Use the src directly - it might be a local URL or uploaded image
-          } else {
-            // Calculate export size based on uniform scale to maintain aspect ratio
-            // Use overlay.size scaled by the uniform scale factor, with 2x for high-res export
-            const exportSize = Math.max(Math.round(overlay.size * scaleX * 2), 200);
-
-            try {
-              const { getCldImageUrl } = await import('@/lib/cloudinary');
-              // Request square dimensions from Cloudinary to match the square container
-              // The 'fit' crop will maintain the image's aspect ratio within the square
-              const generatedUrl = getCldImageUrl({
-                src: overlay.src,
-                width: exportSize,
-                height: exportSize,
-                quality: 'auto',
-                format: 'auto',
-                crop: 'fit', // Maintain aspect ratio, fit within square bounds
-              });
-
-              if (generatedUrl && (generatedUrl.startsWith('http://') || generatedUrl.startsWith('https://'))) {
-                imageSrc = generatedUrl;
-              } else {
-                // Fallback: construct Cloudinary URL manually with 'fit' crop
-                imageSrc = `https://res.cloudinary.com/${cloudName}/image/upload/q_auto,f_auto,c_fit,w_${exportSize},h_${exportSize}/${overlay.src}`;
-              }
-            } catch (error) {
-              console.warn(`getCldImageUrl failed for ${overlay.src}, using manual URL construction:`, error);
-              // Fallback: construct Cloudinary URL manually with 'fit' crop
-              imageSrc = `https://res.cloudinary.com/${cloudName}/image/upload/q_auto,f_auto,c_fit,w_${exportSize},h_${exportSize}/${overlay.src}`;
-            }
-          }
+        if (typeof overlay.src === 'string' && !overlay.isCustom) {
+          // Use the image source directly without Cloudinary optimization
+          imageSrc = overlay.src;
         }
-      }
       
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
@@ -1287,4 +1246,3 @@ export async function exportElement(
     throw error;
   }
 }
-

@@ -8,8 +8,6 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { aspectRatios } from '@/lib/constants/aspect-ratios';
 import { useDropzone } from 'react-dropzone';
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE } from '@/lib/constants';
-import { getCldImageUrl } from '@/lib/cloudinary';
-import { backgroundCategories, getAvailableCategories, cloudinaryPublicIds } from '@/lib/cloudinary-backgrounds';
 import { gradientColors, type GradientKey } from '@/lib/constants/gradient-colors';
 import { solidColors, type SolidColorKey } from '@/lib/constants/solid-colors';
 import { Label } from '@/components/ui/label';
@@ -218,122 +216,34 @@ export function EditorRightPanel() {
                   {backgroundConfig.value && 
                    (backgroundConfig.value.startsWith('blob:') || 
                     backgroundConfig.value.startsWith('http') || 
-                    backgroundConfig.value.startsWith('data:') ||
-                    cloudinaryPublicIds.includes(backgroundConfig.value)) && (
+                    backgroundConfig.value.startsWith('data:')) && (
                     <div className="space-y-2">
                       <Label className="text-xs font-medium text-muted-foreground">Current Background</Label>
                       <div className="relative rounded-lg overflow-hidden border border-border aspect-video bg-muted">
-                        {(() => {
-                          // Check if it's a Cloudinary public ID
-                          const isCloudinaryPublicId = typeof backgroundConfig.value === 'string' && 
-                            !backgroundConfig.value.startsWith('blob:') && 
-                            !backgroundConfig.value.startsWith('http') && 
-                            !backgroundConfig.value.startsWith('data:') &&
-                            cloudinaryPublicIds.includes(backgroundConfig.value);
-                          
-                          let imageUrl = backgroundConfig.value as string;
-                          
-                          // If it's a Cloudinary public ID, get the optimized URL
-                          if (isCloudinaryPublicId) {
-                            imageUrl = getCldImageUrl({
-                              src: backgroundConfig.value as string,
-                              width: 600,
-                              height: 400,
-                              quality: 'auto',
-                              format: 'auto',
-                              crop: 'fill',
-                              gravity: 'auto',
-                            });
-                          }
-                          
-                          return (
-                            <>
-                              <img
-                                src={imageUrl}
-                                alt="Current background"
-                                className="w-full h-full object-cover"
-                              />
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                className="absolute top-2 right-2 flex items-center gap-1.5 bg-destructive hover:bg-destructive/90 text-destructive-foreground border-0 shadow-md px-3 py-1.5 h-auto"
-                                onClick={() => {
-                                  // Reset to default gradient
-                                  setBackgroundType('gradient');
-                                  setBackgroundValue('sunset_vibes');
-                                  // If it's a blob URL, revoke it
-                                  if (backgroundConfig.value.startsWith('blob:')) {
-                                    URL.revokeObjectURL(backgroundConfig.value);
-                                  }
-                                }}
-                              >
-                                <FaTimes size={14} />
-                                <span className="text-xs font-medium">Remove</span>
-                              </Button>
-                            </>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Preset Backgrounds */}
-                  {backgroundCategories && Object.keys(backgroundCategories).length > 0 && (
-                    <div className="space-y-3">
-                      <Label className="text-xs font-medium text-muted-foreground">Preset Backgrounds</Label>
-                      <div className="max-h-50 overflow-y-auto pr-2 space-y-3">
-                        {getAvailableCategories()
-                          .filter((category: string) => category !== 'demo' && category !== 'nature')
-                          .map((category: string) => {
-                            const categoryBackgrounds = backgroundCategories[category];
-                            if (!categoryBackgrounds || categoryBackgrounds.length === 0) return null;
-
-                            const categoryDisplayName = category.charAt(0).toUpperCase() + category.slice(1);
-
-                            return (
-                              <div key={category} className="space-y-2">
-                                <Label className="text-xs font-medium text-muted-foreground capitalize">
-                                  {categoryDisplayName} Wallpapers
-                                </Label>
-                                <div className="grid grid-cols-2 gap-2">
-                                  {categoryBackgrounds.map((publicId: string, idx: number) => {
-                                    const thumbnailUrl = getCldImageUrl({
-                                      src: publicId,
-                                      width: 300,
-                                      height: 200,
-                                      quality: 'auto',
-                                      format: 'auto',
-                                      crop: 'fill',
-                                      gravity: 'auto',
-                                    });
-
-                                    return (
-                                      <button
-                                        key={`${category}-${idx}`}
-                                        onClick={() => {
-                                          setBackgroundValue(publicId);
-                                          setBackgroundType('image');
-                                        }}
-                                        className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all w-full ${
-                                          backgroundConfig.value === publicId
-                                            ? 'border-primary ring-2 ring-ring shadow-sm'
-                                            : 'border-border hover:border-border/80'
-                                        }`}
-                                        title={`${categoryDisplayName} ${idx + 1}`}
-                                      >
-                                        <img
-                                          src={thumbnailUrl}
-                                          alt={`${categoryDisplayName} ${idx + 1}`}
-                                          className="w-full h-full object-cover"
-                                          loading="lazy"
-                                        />
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            );
-                          })}
+                        <>
+                          <img
+                            src={backgroundConfig.value as string}
+                            alt="Current background"
+                            className="w-full h-full object-cover"
+                          />
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            className="absolute top-2 right-2 flex items-center gap-1.5 bg-destructive hover:bg-destructive/90 text-destructive-foreground border-0 shadow-md px-3 py-1.5 h-auto"
+                            onClick={() => {
+                              // Reset to default gradient
+                              setBackgroundType('gradient');
+                              setBackgroundValue('sunset_vibes');
+                              // If it's a blob URL, revoke it
+                              if (backgroundConfig.value.startsWith('blob:')) {
+                                URL.revokeObjectURL(backgroundConfig.value);
+                              }
+                            }}
+                          >
+                            <FaTimes size={14} />
+                            <span className="text-xs font-medium">Remove</span>
+                          </Button>
+                        </>
                       </div>
                     </div>
                   )}
@@ -445,4 +355,3 @@ export function EditorRightPanel() {
     </div>
   );
 }
-

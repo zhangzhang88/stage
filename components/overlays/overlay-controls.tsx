@@ -5,8 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { useImageStore } from '@/lib/store'
 import { Trash2, Eye, EyeOff } from 'lucide-react'
-import { getCldImageUrl } from '@/lib/cloudinary'
-import { OVERLAY_PUBLIC_IDS } from '@/lib/cloudinary-overlays'
 
 export function OverlayControls() {
   const {
@@ -115,33 +113,12 @@ export function OverlayControls() {
                   )}
                 </Button>
                 <div className="relative w-8 h-8 shrink-0 rounded overflow-hidden">
-                  {(() => {
-                    // Check if this is a Cloudinary public ID or a custom upload
-                    const isCloudinaryId = OVERLAY_PUBLIC_IDS.includes(overlay.src as any) || 
-                                         (typeof overlay.src === 'string' && overlay.src.startsWith('overlays/'))
-                    
-                    // Get the image URL - use Cloudinary if it's a Cloudinary ID, otherwise use the src directly
-                    const imageUrl = isCloudinaryId && !overlay.isCustom
-                      ? getCldImageUrl({
-                          src: overlay.src,
-                          width: 32,
-                          height: 32,
-                          quality: 'auto',
-                          format: 'auto',
-                          crop: 'fit',
-                        })
-                      : overlay.src
-                    
-                    // Use regular img tag for Cloudinary URLs and data URLs
-                    return (
-                      <img
-                        src={imageUrl}
-                        alt="Overlay preview"
-                        className="object-contain w-full h-full"
-                        style={{ display: 'block' }}
-                      />
-                    )
-                  })()}
+                  <img
+                    src={overlay.src}
+                    alt="Overlay preview"
+                    className="object-contain w-full h-full"
+                    style={{ display: 'block' }}
+                  />
                 </div>
                 <Button
                   variant="ghost"
@@ -288,4 +265,3 @@ export function OverlayControls() {
     </div>
   )
 }
-

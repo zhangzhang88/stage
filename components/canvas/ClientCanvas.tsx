@@ -10,8 +10,6 @@ import { useResponsiveCanvasDimensions } from '@/hooks/useAspectRatioDimensions'
 import { getBackgroundCSS } from '@/lib/constants/backgrounds'
 import { getFontCSS } from '@/lib/constants/fonts'
 import { generateNoiseTexture } from '@/lib/export/export-utils'
-import { getCldImageUrl } from '@/lib/cloudinary'
-import { OVERLAY_PUBLIC_IDS } from '@/lib/cloudinary-overlays'
 import { MockupRenderer } from '@/components/mockups/MockupRenderer'
 
 // Global ref to store the Konva stage for export
@@ -176,24 +174,9 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
       // Check if it's a Cloudinary public ID or URL
       let imageUrl = imageValue
       if (typeof imageUrl === 'string' && !imageUrl.startsWith('http') && !imageUrl.startsWith('blob:') && !imageUrl.startsWith('data:')) {
-        // It might be a Cloudinary public ID, construct URL
-        const { cloudinaryPublicIds } = require('@/lib/cloudinary-backgrounds')
-        if (cloudinaryPublicIds.includes(imageUrl)) {
-          // Use container dimensions for better quality
-          imageUrl = getCldImageUrl({
-            src: imageUrl,
-            width: Math.max(containerWidth, 1920),
-            height: Math.max(containerHeight, 1080),
-            quality: 'auto',
-            format: 'auto',
-            crop: 'fill',
-            gravity: 'auto',
-          })
-        } else {
-          // Invalid image value, don't try to load
-          setBgImage(null)
-          return
-        }
+        // For local images or invalid values, don't try to load
+        setBgImage(null)
+        return
       }
 
       img.src = imageUrl
@@ -211,20 +194,6 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
         if (!overlay.isVisible) continue
 
         try {
-          const isCloudinaryId = OVERLAY_PUBLIC_IDS.includes(overlay.src as any) ||
-                                 (typeof overlay.src === 'string' && overlay.src.startsWith('overlays/'))
-
-          const imageUrl = isCloudinaryId && !overlay.isCustom
-            ? getCldImageUrl({
-                src: overlay.src,
-                width: overlay.size * 2,
-                height: overlay.size * 2,
-                quality: 'auto',
-                format: 'auto',
-                crop: 'fit',
-              })
-            : overlay.src
-
           const img = new window.Image()
           img.crossOrigin = 'anonymous'
 
@@ -234,7 +203,7 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
               resolve()
             }
             img.onerror = reject
-            img.src = imageUrl
+            img.src = overlay.src
           })
         } catch (error) {
           console.error(`Failed to load overlay image for ${overlay.id}:`, error)
