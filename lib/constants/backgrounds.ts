@@ -1,7 +1,8 @@
 import { gradientColors, GradientKey } from './gradient-colors';
 import { SolidColorKey, solidColors } from './solid-colors';
+import { MAC_WALLPAPERS } from './mac-wallpapers';
 
-export type BackgroundType = 'gradient' | 'solid' | 'image';
+export type BackgroundType = 'gradient' | 'solid' | 'image' | 'mac';
 
 export interface BackgroundConfig {
   type: BackgroundType;
@@ -21,6 +22,9 @@ export const getBackgroundStyle = (config: BackgroundConfig): string => {
       return color;
 
     case 'image':
+      return `url(${value})`;
+
+    case 'mac':
       return `url(${value})`;
 
     default:
@@ -49,6 +53,15 @@ export const getBackgroundCSS = (
       };
 
     case 'image':
+      return {
+        backgroundImage: `url(${value})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        opacity,
+      };
+
+    case 'mac':
       return {
         backgroundImage: `url(${value})`,
         backgroundSize: 'cover',

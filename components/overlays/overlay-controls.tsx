@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { useImageStore } from '@/lib/store'
@@ -15,6 +15,24 @@ export function OverlayControls() {
   } = useImageStore()
 
   const [selectedOverlayId, setSelectedOverlayId] = useState<string | null>(null)
+
+  // Auto-select newly added overlays
+  useEffect(() => {
+    const handleOverlayAdded = (event: Event) => {
+      setTimeout(() => {
+        if (imageOverlays.length > 0) {
+          // Select the most recently added overlay
+          setSelectedOverlayId(imageOverlays[imageOverlays.length - 1].id)
+        }
+      }, 150)
+    }
+
+    window.addEventListener('overlayAdded', handleOverlayAdded)
+
+    return () => {
+      window.removeEventListener('overlayAdded', handleOverlayAdded)
+    }
+  }, [imageOverlays])
 
   const selectedOverlay = imageOverlays.find(
     (overlay) => overlay.id === selectedOverlayId

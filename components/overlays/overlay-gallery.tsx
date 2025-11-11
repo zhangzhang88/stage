@@ -32,7 +32,7 @@ export function OverlayGallery() {
   const handleAddOverlay = (src: string) => {
     // Default position at top center of canvas
     const defaultPosition = getDefaultPosition()
-    addImageOverlay({
+    const newOverlay = {
       src,
       position: defaultPosition,
       size: 150,
@@ -41,7 +41,16 @@ export function OverlayGallery() {
       flipX: false,
       flipY: false,
       isVisible: true,
-    })
+    }
+    addImageOverlay(newOverlay)
+    
+    // Wait a moment for the overlay to be added, then select it
+    // The overlay will have the current timestamp as part of its ID
+    setTimeout(() => {
+      // Trigger selection by dispatching a custom event
+      const event = new CustomEvent('overlayAdded', { detail: { src } })
+      window.dispatchEvent(event)
+    }, 100)
   }
 
   const handleCustomOverlayUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

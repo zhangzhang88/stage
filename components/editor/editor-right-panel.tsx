@@ -10,6 +10,7 @@ import { useDropzone } from 'react-dropzone';
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE } from '@/lib/constants';
 import { gradientColors, type GradientKey } from '@/lib/constants/gradient-colors';
 import { solidColors, type SolidColorKey } from '@/lib/constants/solid-colors';
+import { MAC_WALLPAPERS } from '@/lib/constants/mac-wallpapers';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { FaImage, FaTimes } from 'react-icons/fa';
@@ -111,18 +112,23 @@ export function EditorRightPanel() {
               {/* Background Type Selector */}
               <div className="space-y-3">
                 <Label className="text-xs font-medium text-muted-foreground">Background Type</Label>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <Button
-                  variant={backgroundConfig.type === 'image' ? 'default' : 'outline'}
+                  variant={backgroundConfig.type === 'gradient' ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => setBackgroundType('image')}
-                    className={`flex-1 text-xs font-medium transition-all rounded-lg h-8 border ${
-                    backgroundConfig.type === 'image'
+                  onClick={() => {
+                    setBackgroundType('gradient');
+                    if (!backgroundConfig.value || typeof backgroundConfig.value !== 'string' || !gradientColors[backgroundConfig.value as GradientKey]) {
+                      setBackgroundValue('sunset_vibes');
+                    }
+                  }}
+                    className={`text-xs font-medium transition-all rounded-lg h-8 border ${
+                    backgroundConfig.type === 'gradient'
                         ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm border-primary'
                         : 'border-border/50 hover:bg-accent text-foreground bg-background hover:border-border'
                   }`}
                 >
-                  Image
+                  Gradient
                 </Button>
                 <Button
                   variant={backgroundConfig.type === 'solid' ? 'default' : 'outline'}
@@ -133,7 +139,7 @@ export function EditorRightPanel() {
                       setBackgroundValue('white');
                     }
                   }}
-                    className={`flex-1 text-xs font-medium transition-all rounded-lg h-8 border ${
+                    className={`text-xs font-medium transition-all rounded-lg h-8 border ${
                     backgroundConfig.type === 'solid'
                         ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm border-primary'
                         : 'border-border/50 hover:bg-accent text-foreground bg-background hover:border-border'
@@ -142,21 +148,33 @@ export function EditorRightPanel() {
                   Solid
                 </Button>
                 <Button
-                  variant={backgroundConfig.type === 'gradient' ? 'default' : 'outline'}
+                  variant={backgroundConfig.type === 'mac' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => {
-                    setBackgroundType('gradient');
-                    if (!backgroundConfig.value || typeof backgroundConfig.value !== 'string' || !gradientColors[backgroundConfig.value as GradientKey]) {
-                      setBackgroundValue('sunset_vibes');
+                    setBackgroundType('mac');
+                    if (!backgroundConfig.value || typeof backgroundConfig.value !== 'string' || !MAC_WALLPAPERS.includes(backgroundConfig.value as any)) {
+                      setBackgroundValue(MAC_WALLPAPERS[8]); // Default to mac-asset-9.jpg
                     }
                   }}
-                    className={`flex-1 text-xs font-medium transition-all rounded-lg h-8 border ${
-                    backgroundConfig.type === 'gradient'
+                    className={`text-xs font-medium transition-all rounded-lg h-8 border ${
+                    backgroundConfig.type === 'mac'
                         ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm border-primary'
                         : 'border-border/50 hover:bg-accent text-foreground bg-background hover:border-border'
                   }`}
                 >
-                  Gradient
+                  Mac Wallpapers
+                </Button>
+                <Button
+                  variant={backgroundConfig.type === 'image' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setBackgroundType('image')}
+                    className={`text-xs font-medium transition-all rounded-lg h-8 border ${
+                    backgroundConfig.type === 'image'
+                        ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm border-primary'
+                        : 'border-border/50 hover:bg-accent text-foreground bg-background hover:border-border'
+                  }`}
+                >
+                  Upload Image
                 </Button>
                 </div>
               </div>
@@ -206,6 +224,64 @@ export function EditorRightPanel() {
                               />
                             ))}
                           </div>
+                </div>
+              )}
+
+              {/* Mac Wallpapers Selector */}
+              {backgroundConfig.type === 'mac' && (
+                <div className="space-y-4">
+                  <Label className="text-xs font-medium text-muted-foreground">Mac Wallpapers</Label>
+                  <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-2">
+                    {MAC_WALLPAPERS.map((wallpaperPath, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setBackgroundValue(wallpaperPath)}
+                        className={`aspect-video rounded-lg border-2 transition-all overflow-hidden relative ${
+                          backgroundConfig.value === wallpaperPath
+                            ? 'border-primary ring-2 ring-ring shadow-sm'
+                            : 'border-border hover:border-border/80'
+                        }`}
+                        title={`Mac Wallpaper ${index + 1}`}
+                      >
+                        <img
+                          src={wallpaperPath}
+                          alt={`Mac Wallpaper ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            console.error(`Failed to load wallpaper: ${wallpaperPath}`, e);
+                            // Fallback: show number when image fails to load
+                            const target = e.target as HTMLElement;
+                            target.style.display = 'none';
+                            const fallback = target.parentElement?.querySelector('.fallback-text');
+                            if (fallback) {
+                              (fallback as HTMLElement).style.display = 'flex';
+                            }
+                          }}
+                          loading="lazy"
+                        />
+                        {/* Fallback text shown when image fails to load */}
+                        <div 
+                          className="fallback-text absolute inset-0 flex items-center justify-center text-xs font-medium text-white bg-muted hidden"
+                          style={{ display: 'none' }}
+                        >
+                          {index + 1}
+                        </div>
+                        {/* Selection indicator */}
+                        <div className={`absolute inset-0 bg-black bg-opacity-0 transition-all ${
+                          backgroundConfig.value === wallpaperPath ? 'bg-opacity-20' : 'bg-opacity-0'
+                        }`} />
+                        {/* Selected checkmark */}
+                        {backgroundConfig.value === wallpaperPath && (
+                          <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full p-1">
+                            ✓
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground bg-muted/50 border border-border/50 rounded-lg p-2">
+                    ℹ️ Mac 风格壁纸，为您的图像提供专业的背景效果
+                  </p>
                 </div>
               )}
 
