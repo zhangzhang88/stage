@@ -236,46 +236,33 @@ export function EditorRightPanel() {
                       <button
                         key={index}
                         onClick={() => setBackgroundValue(wallpaperPath)}
-                        className={`aspect-video rounded-lg border-2 transition-all overflow-hidden relative ${
+                        className={`aspect-video rounded-lg border-2 transition-all overflow-hidden relative flex items-center justify-center ${
                           backgroundConfig.value === wallpaperPath
                             ? 'border-primary ring-2 ring-ring shadow-sm'
                             : 'border-border hover:border-border/80'
                         }`}
                         title={`Mac Wallpaper ${index + 1}`}
+                        style={{
+                          backgroundImage: `url(${wallpaperPath})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          backgroundRepeat: 'no-repeat',
+                        }}
                       >
-                        <img
-                          src={wallpaperPath}
-                          alt={`Mac Wallpaper ${index + 1}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            console.error(`Failed to load wallpaper: ${wallpaperPath}`, e);
-                            // Fallback: show number when image fails to load
-                            const target = e.target as HTMLElement;
-                            target.style.display = 'none';
-                            const fallback = target.parentElement?.querySelector('.fallback-text');
-                            if (fallback) {
-                              (fallback as HTMLElement).style.display = 'flex';
-                            }
-                          }}
-                          loading="lazy"
-                        />
-                        {/* Fallback text shown when image fails to load */}
-                        <div 
-                          className="fallback-text absolute inset-0 flex items-center justify-center text-xs font-medium text-white bg-muted hidden"
-                          style={{ display: 'none' }}
-                        >
-                          {index + 1}
-                        </div>
                         {/* Selection indicator */}
                         <div className={`absolute inset-0 bg-black bg-opacity-0 transition-all ${
                           backgroundConfig.value === wallpaperPath ? 'bg-opacity-20' : 'bg-opacity-0'
                         }`} />
                         {/* Selected checkmark */}
                         {backgroundConfig.value === wallpaperPath && (
-                          <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full p-1">
+                          <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full p-1 text-xs">
                             ✓
                           </div>
                         )}
+                        {/* Display number in center as fallback */}
+                        <span className="text-xs font-medium text-white bg-black bg-opacity-50 px-2 py-1 rounded">
+                          {index + 1}
+                        </span>
                       </button>
                     ))}
                   </div>
