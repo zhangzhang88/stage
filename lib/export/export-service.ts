@@ -1213,15 +1213,7 @@ export async function exportElement(
     // No need to composite multiple layers since everything is in Konva now
     const finalCanvas = konvaCanvas;
 
-    // Step 4: Add watermark
-    addWatermarkToCanvas(finalCanvas, {
-      text: 'stagee.art',
-      position: 'bottom-right',
-      backgroundColor: 'transparent',
-      textColor: 'rgba(255, 255, 255, 0.7)',
-    });
-
-    // Step 5: Convert to blob and data URL
+    // Step 4: Convert to blob and data URL
     const mimeType = 'image/png';
   
     const blob = await new Promise<Blob>((resolve, reject) => {
