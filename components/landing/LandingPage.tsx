@@ -6,7 +6,6 @@ import { MasonryGrid } from "./MasonryGrid";
 import { Pricing } from "./Pricing";
 import { FAQ } from "./FAQ";
 import { Sponsors, Sponsor } from "./Sponsors";
-import { SponsorButton } from "@/components/SponsorButton";
 
 interface Feature {
   title: string;
@@ -56,8 +55,6 @@ export function LandingPage({
       <Sponsors sponsors={sponsors} title={sponsorsTitle} />
       <FAQ />
       <Footer brandName={brandName}/>
-      <SponsorButton variant="floating" />
     </div>
   );
 }
-

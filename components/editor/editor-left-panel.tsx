@@ -13,7 +13,6 @@ import { Download, Trash2, Copy, ImageIcon, Type, Sticker } from 'lucide-react';
 import { useImageStore } from '@/lib/store';
 import { ExportDialog } from '@/components/canvas/dialogs/ExportDialog';
 import { useExport } from '@/hooks/useExport';
-import { PresetSelector } from '@/components/presets/PresetSelector';
 import { FaXTwitter } from 'react-icons/fa6';
 
 export function EditorLeftPanel() {
@@ -41,27 +40,8 @@ export function EditorLeftPanel() {
         {/* Header */}
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <Link href="/landing" className="flex items-center hover:opacity-80 transition-opacity shrink-0">
-              <Image 
-                src="/logo.png" 
-                alt="Stage" 
-                width={32} 
-                height={32}
-                className="h-8 w-8"
-              />
-            </Link>
             <div className="flex-1 min-w-0 max-w-[calc(100%-120px)]">
-              <PresetSelector />
             </div>
-            <a
-              href="https://x.com/code_kartik"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 hover:bg-accent rounded-lg transition-colors text-muted-foreground hover:text-foreground shrink-0"
-              aria-label="Twitter/X"
-            >
-              <FaXTwitter className="h-5 w-5" />
-            </a>
           </div>
         </div>
 
@@ -172,4 +152,3 @@ export function EditorLeftPanel() {
     </>
   );
 }
-
